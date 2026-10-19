@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Рандомайзер — колесо, монетка, числа, кубики, шар 8</title>
+<style>
+:root {
+  --bg: #0f172a; --panel: #1e293b; --border: #334155; --border-light: #475569;
+  --text: #e2e8f0; --muted: #94a3b8;
+  --accent: #22c55e; --accent-2: #16a34a; --warn: #fbbf24; --danger: #ef4444;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+header { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+h1 { font-size: 1.3rem; }
+h2 { font-size: 1.2rem; margin-bottom: 16px; }
+.btn-icon { background: var(--panel); border: 1px solid var(--border); color: var(--text);
+  width: 38px; height: 38px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; }
+.btn-icon:hover { background: var(--border); }
+nav { display: flex; gap: 6px; flex-wrap: wrap; }
+nav a { padding: 8px 14px; border-radius: 8px; color: var(--text);
+  text-decoration: none; background: var(--panel); font-size: 14px; font-weight: 500;
+  border: 1px solid transparent; white-space: nowrap; }
+nav a:hover { background: var(--border); }
+nav a.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+main { padding: 20px; max-width: 1100px; margin: 0 auto; flex: 1; width: 100%; }
+.panel { background: var(--panel); padding: 20px; border-radius: 12px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 780px) { .two-col { grid-template-columns: 1fr; } }
+textarea, input[type="text"], input[type="number"], select {
+  width: 100%; background: var(--bg); color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 12px; font-size: 15px; font-family: inherit; transition: border-color 0.2s, box-shadow 0.2s; }
+textarea { height: 200px; resize: vertical; }
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+label.checkbox { display: flex; align-items: center; gap: 8px; margin: 10px 0; cursor: pointer; font-size: 14px; }
+.btn-primary { width: 100%; padding: 16px; font-size: 17px; font-weight: 700; color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border: none; border-radius: 10px; cursor: pointer; transition: transform 0.1s; }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-secondary { padding: 10px 16px; font-size: 14px; font-weight: 600; color: var(--text);
+  background: var(--border); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer; }
+.btn-secondary:hover { background: var(--border-light); }
+.btn-small { flex: 1; min-width: 110px; padding: 9px 12px; font-size: 13px; font-weight: 600;
+  color: var(--text); background: var(--border); border: 1px solid var(--border-light);
+  border-radius: 8px; cursor: pointer; }
+.btn-small:hover { background: var(--border-light); }
+.btn-row { display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap; }
+.result { margin-top: 16px; padding: 16px; background: var(--bg); border-radius: 8px;
+  min-height: 60px; text-align: center; }
+.result-big { font-size: 2rem; font-weight: 700; color: var(--warn); word-break: break-word; }
+.result-muted { color: var(--muted); font-size: 14px; }
+.wheel-wrap { position: relative; width: 100%; aspect-ratio: 1; max-width: 420px; margin: 0 auto; }
+.wheel-wrap canvas { width: 100%; height: 100%; display: block; }
+.pointer { position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 14px solid transparent; border-right: 14px solid transparent;
+  border-top: 22px solid var(--danger); z-index: 2;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+.counter { font-size: 13px; color: var(--warn); font-weight: 600; margin: 8px 0; min-height: 18px; }
+
+/* ===== Стильная схематичная монетка ===== */
+.coin-wrap { display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 20px 0; }
+.coin-container { perspective: 1500px; width: 260px; height: 260px; }
+.coin { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 2.5s cubic-bezier(0.3, 0.9, 0.4, 1); }
+
+.coin-face { 
+  position: absolute; width: 100%; height: 100%; border-radius: 50%; 
+  backface-visibility: hidden; 
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 30% 30%, #fff8d6 0%, #fceabb 20%, #f8b500 60%, #b06a00 100%);
+  border: 4px solid #8a5a00;
+  box-shadow: 
+    inset 0 0 15px rgba(0,0,0,0.3),
+    inset 0 0 5px rgba(255,255,255,0.6),
+    0 15px 25px rgba(0,0,0,0.5);
+  overflow: hidden;
+}
+
+.coin-face::before {
+  content: ''; position: absolute; inset: 8px; border-radius: 50%;
+  border: 2px solid rgba(138, 90, 0, 0.4);
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.2);
+  pointer-events: none; z-index: 2;
+}
+
+.coin-back { transform: rotateY(180deg); }
+
+.coin-text {
+  position: absolute; font-family: 'Times New Roman', serif; font-weight: 900;
+  color: #5c4300; text-transform: uppercase; letter-spacing: 1px;
+  text-shadow: 1px 1px 0px rgba(255,255,255,0.5), -1px -1px 0px rgba(0,0,0,0.3);
+  z-index: 3; font-size: 1rem;
+}
+.coin-text.top { top: 22px; }
+.coin-text.bottom { bottom: 22px; transform: rotate(180deg); }
+
+.coin-svg {
+  width: 50%; height: 50%; z-index: 1; color: #5c4300;
+  filter: drop-shadow(1px 1px 0px rgba(255,255,255,0.4)) drop-shadow(-1px -1px 0px rgba(0,0,0,0.4));
+}
+
+@media (max-width: 480px) {
+  .coin-container { width: 220px; height: 220px; }
+  .coin-text { font-size: 0.85rem; }
+}
+
+.dice-result { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 12px; }
+.die { width: 52px; height: 52px; background: linear-gradient(135deg, #f8fafc, #cbd5e1);
+  color: #0f172a; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3), inset 0 -2px 4px rgba(0,0,0,0.1); }
+.dice-total { font-size: 1.1rem; color: var(--warn); font-weight: 700; margin-top: 12px; text-align: center; }
+.num-result { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.num-badge { padding: 10px 16px; background: var(--accent); color: #fff;
+  border-radius: 8px; font-size: 1.1rem; font-weight: 700; min-width: 54px; text-align: center; }
+.shuffle-list { list-style: none; padding: 0; }
+.shuffle-list li { padding: 10px 14px; background: var(--panel); border-radius: 8px;
+  margin-bottom: 6px; display: flex; gap: 12px; align-items: center; }
+.shuffle-list li .num { color: var(--muted); font-weight: 700; min-width: 24px; }
+
+/* ===== Волшебный шар 8 ===== */
+.magic8-wrap { display: flex; flex-direction: column; align-items: center; padding: 30px 20px; }
+.magic-ball {
+  width: 280px; height: 280px;
+  background: radial-gradient(circle at 35% 30%, #4a4a4a 0%, #1a1a1a 50%, #000 100%);
+  border-radius: 50%; position: relative; cursor: pointer;
+  box-shadow:
+    0 10px 40px rgba(0,0,0,0.6),
+    inset -15px -15px 40px rgba(0,0,0,0.9),
+    inset 15px 15px 30px rgba(255,255,255,0.08);
+  user-select: none;
+}
+.magic-ball.shaking { animation: magic-shake 1.2s ease-in-out; }
+@keyframes magic-shake {
+  0%, 100% { transform: rotate(0deg) translate(0, 0); }
+  10% { transform: rotate(-8deg) translate(-4px, -2px); }
+  20% { transform: rotate(8deg) translate(4px, 2px); }
+  30% { transform: rotate(-10deg) translate(-5px, -3px); }
+  40% { transform: rotate(10deg) translate(5px, 3px); }
+  50% { transform: rotate(-8deg) translate(-4px, -2px); }
+  60% { transform: rotate(8deg) translate(4px, 2px); }
+  70% { transform: rotate(-6deg) translate(-3px, -1px); }
+  80% { transform: rotate(6deg) translate(3px, 1px); }
+  90% { transform: rotate(-3deg) translate(-1px, 0); }
+}
+.magic-window {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 58%; height: 58%;
+  background: radial-gradient(circle at center, #0f172a, #020617);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 0 25px rgba(0,0,0,0.9), 0 0 20px rgba(59,130,246,0.2);
+  overflow: hidden;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.magic-number {
+  font-size: 7rem; font-weight: 900; color: #f1f5f9;
+  font-family: 'Arial Black', 'Arial', sans-serif;
+  transition: opacity 0.3s; line-height: 1;
+  text-shadow: 0 0 20px rgba(148, 163, 184, 0.3);
+}
+.magic-answer {
+  position: absolute; inset: 0; padding: 15%;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; color: #f1f5f9;
+  font-size: 1rem; font-weight: 600;
+  opacity: 0; transition: opacity 0.4s;
+  line-height: 1.3;
+  background: radial-gradient(circle at center, #1e40af 0%, #1e3a8a 40%, #172554 100%);
+  border-radius: 50%;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.6);
+}
+.magic-window.showing-answer .magic-number { opacity: 0; }
+.magic-window.showing-answer .magic-answer { opacity: 1; }
+.magic-window.showing-answer {
+  background: radial-gradient(circle at center, #1e40af, #172554);
+  box-shadow: inset 0 0 25px rgba(0,0,0,0.6), 0 0 30px rgba(59,130,246,0.4);
+}
+.magic-window.refusal {
+  background: radial-gradient(circle at center, #7f1d1d, #450a0a) !important;
+  box-shadow: inset 0 0 25px rgba(0,0,0,0.7), 0 0 30px rgba(239,68,68,0.5) !important;
+}
+.magic-window.refusal .magic-answer {
+  background: radial-gradient(circle at center, #991b1b 0%, #7f1d1d 50%, #450a0a 100%);
+  font-size: 0.9rem;
+}
+.magic-advice {
+  max-width: 500px; margin: 20px auto 0; padding: 14px 16px;
+  background: rgba(239,68,68,0.08); border-left: 3px solid #ef4444;
+  border-radius: 8px; font-size: 13px; line-height: 1.55; color: #e2e8f0;
+}
+.magic-advice strong { color: #fca5a5; }
+.magic-advice a { color: #fca5a5; }
+.magic-disclaimer {
+  max-width: 500px; margin: 16px auto 0; font-size: 11px;
+  color: #64748b; text-align: center; line-height: 1.5;
+}
+@media (max-width: 480px) {
+  .magic-ball { width: 220px; height: 220px; }
+  .magic-number { font-size: 5.5rem; }
+  .magic-answer { font-size: 0.85rem; }
+  .magic-window.refusal .magic-answer { font-size: 0.8rem; }
+}
+
+/* ===== Разделить на команды ===== */
+.teams-output { display: flex; flex-direction: column; gap: 10px; }
+.team-card {
+  background: var(--panel); border-radius: 10px; padding: 12px 14px;
+  border-left: 4px solid var(--team-color, #22c55e);
+}
+.team-card-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+.team-card-name { font-weight: 700; color: var(--team-color, #22c55e); font-size: 15px; }
+.team-card-size { font-size: 12px; color: var(--muted); font-weight: 500; }
+.team-card ul { list-style: none; padding: 0; margin: 0; }
+.team-card li { padding: 5px 0; font-size: 14px; }
+.team-card li + li { border-top: 1px solid rgba(51,65,85,0.5); }
+
+/* Футер */
+footer { text-align: center; padding: 20px; font-size: 13px; border-top: 1px solid var(--border); margin-top: 40px; }
+footer a { color: var(--muted); text-decoration: none; margin: 0 10px; transition: color 0.2s; }
+footer a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- Cookie-баннер -->
+<div id="cookie-banner" style="position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #e2e8f0; padding: 15px; text-align: center; z-index: 9999; box-shadow: 0 -2px 10px rgba(0,0,0,0.5); font-size: 14px; display: none;">
+    Мы используем файлы cookie для улучшения работы сайта и показа рекламы. 
+    <a href="privacy.html" style="color: #22c55e;">Подробнее</a>
+    <button onclick="document.getElementById('cookie-banner').style.display='none'; localStorage.setItem('cookie_accepted', 'true');" style="margin-left: 15px; background: #22c55e; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">Принять</button>
+</div>
+<script>
+    if (!localStorage.getItem('cookie_accepted')) {
+        document.getElementById('cookie-banner').style.display = 'block';
+    }
+</script>
+
+<header>
+  <div class="header-top">
+    <h1>🎲 Рандомайзер</h1>
+    <button class="btn-icon" id="sound-toggle" title="Звук">🔊</button>
+  </div>
+  <nav>
+    <a href="#wheel" data-page="wheel">🎡 Колесо</a>
+    <a href="#coin" data-page="coin">🪙 Монетка</a>
+    <a href="#number" data-page="number">🔢 Числа</a>
+    <a href="#dice" data-page="dice">🎲 Кубики</a>
+    <a href="#shuffle" data-page="shuffle">🔀 Перемешать</a>
+    <a href="#teams" data-page="teams">👥 Команды</a>
+    <a href="#magic8" data-page="magic8">🔮 Шар 8</a>
+  </nav>
+</header>
+<main id="app"></main>
+<script>
+// ===== Утилиты =====
+function secureRandomInt(max) {
+  if (max <= 0) return 0;
+  const buf = new Uint32Array(1);
+  const limit = Math.floor(0xFFFFFFFF / max) * max;
+  let val;
+  do { crypto.getRandomValues(buf); val = buf[0]; } while (val >= limit);
+  return val % max;
+}
+
+let audioCtx = null;
+let soundEnabled = localStorage.getItem('sound') !== 'off';
+const COLORS = ['#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#3b82f6','#8b5cf6','#ec4899','#06b6d4','#84cc16','#f43f5e','#a855f7','#0ea5e9','#d946ef','#10b981'];
+const TEAM_COLORS = ['#22c55e','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#84cc16','#f97316','#14b8a6'];
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function playTone(freq, duration, type = 'sine', volume = 0.1) {
+  if (!soundEnabled) return;
+  const ac = getAudioCtx(); if (!ac) return;
+  const osc = ac.createOscillator(); const gain = ac.createGain();
+  osc.type = type; osc.frequency.value = freq;
+  gain.gain.setValueAtTime(volume, ac.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + duration);
+  osc.connect(gain).connect(ac.destination);
+  osc.start(); osc.stop(ac.currentTime + duration);
+}
+function playTick() { playTone(1200, 0.03, 'square', 0.04); }
+function playFanfare() {
+  [523.25, 659.25, 783.99, 1046.5].forEach((f, i) =>
+    setTimeout(() => playTone(f, 0.25, 'sine', 0.15), i * 120));
+}
+function playCoin() {
+  [1200, 1600, 1200].forEach((f, i) =>
+    setTimeout(() => playTone(f, 0.1, 'triangle', 0.1), i * 80));
+}
+function playDice() {
+  for (let i = 0; i < 6; i++)
+    setTimeout(() => playTone(400 + Math.random() * 400, 0.05, 'square', 0.06), i * 50);
+}
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[c]);
+}
+
+// ===== Колесо =====
+function renderWheel(root) {
+  root.innerHTML = `
+    <h2>🎡 Колесо имён</h2>
+    <div class="two-col">
+      <div class="panel">
+        <textarea id="wheel-names" placeholder="Введите варианты, каждый с новой строки:&#10;Анна&#10;Иван&#10;Мария&#10;Пётр"></textarea>
+        <div class="btn-row">
+          <button class="btn-small" id="wheel-paste">📋 Вставить</button>
+          <button class="btn-small" id="wheel-reset">🔄 Сбросить</button>
+        </div>
+        <label class="checkbox"><input type="checkbox" id="wheel-remove"> Убирать выпавший вариант</label>
+        <div class="counter" id="wheel-counter"></div>
+        <p class="result-muted" style="margin-top:8px;font-size:12px">Список сохраняется автоматически</p>
+      </div>
+      <div class="panel">
+        <div class="wheel-wrap">
+          <div class="pointer"></div>
+          <canvas id="wheel-canvas" width="500" height="500"></canvas>
+        </div>
+        <button class="btn-primary" id="wheel-spin" style="margin-top:16px">Крутить</button>
+        <div class="result" id="wheel-result" style="display:none">
+          <div class="result-big" id="wheel-winner"></div>
+          <button class="btn-secondary" id="wheel-copy" style="margin-top:8px;display:none">Скопировать</button>
+        </div>
+      </div>
+    </div>`;
+
+  const canvas = root.querySelector('#wheel-canvas');
+  const ctx = canvas.getContext('2d');
+  const namesInput = root.querySelector('#wheel-names');
+  const spinBtn = root.querySelector('#wheel-spin');
+  const resultEl = root.querySelector('#wheel-result');
+  const winnerEl = root.querySelector('#wheel-winner');
+  const copyBtn = root.querySelector('#wheel-copy');
+  const removeChk = root.querySelector('#wheel-remove');
+  const counterEl = root.querySelector('#wheel-counter');
+  const pasteBtn = root.querySelector('#wheel-paste');
+  const resetBtn = root.querySelector('#wheel-reset');
+
+  const SIZE = 500, RADIUS = SIZE/2, CENTER = SIZE/2;
+  const STORAGE_KEY = 'wheel_names_v1', BACKUP_KEY = 'wheel_backup_v1';
+  let currentAngle = 0, isSpinning = false, rafId = null;
+  let lastWinnerText = '', lastSectorIndex = -1;
+
+  const getNames = () => namesInput.value.split('\n').map(s => s.trim()).filter(Boolean);
+  const saveNames = () => { try { localStorage.setItem(STORAGE_KEY, namesInput.value); } catch(e){} };
+
+  function updateCounter() {
+    const names = getNames();
+    const backup = localStorage.getItem(BACKUP_KEY);
+    if (backup) {
+      const bc = backup.split('\n').map(s => s.trim()).filter(Boolean).length;
+      if (names.length < bc) { counterEl.textContent = `Осталось: ${names.length} из ${bc}`; return; }
+    }
+    counterEl.textContent = names.length ? `Вариантов: ${names.length}` : '';
+  }
+
+  function drawWheel(angle) {
+    const names = getNames();
+    ctx.clearRect(0, 0, SIZE, SIZE);
+    if (names.length === 0) {
+      ctx.fillStyle = '#334155';
+      ctx.beginPath(); ctx.arc(CENTER, CENTER, RADIUS-4, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 20px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('Добавьте варианты', CENTER, CENTER);
+      return;
+    }
+    const arc = (Math.PI*2) / names.length;
+    for (let i = 0; i < names.length; i++) {
+      const start = angle + i * arc, end = start + arc;
+      ctx.beginPath(); ctx.moveTo(CENTER, CENTER);
+      ctx.arc(CENTER, CENTER, RADIUS-4, start, end); ctx.closePath();
+      ctx.fillStyle = COLORS[i % COLORS.length]; ctx.fill();
+      ctx.strokeStyle = 'rgba(15,23,42,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.save(); ctx.translate(CENTER, CENTER); ctx.rotate(start + arc/2);
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 16px sans-serif';
+      let label = names[i];
+      if (label.length > 18) label = label.slice(0,16) + '…';
+      ctx.fillText(label, RADIUS-20, 0); ctx.restore();
+    }
+    ctx.beginPath(); ctx.arc(CENTER, CENTER, 22, 0, Math.PI*2);
+    ctx.fillStyle = '#0f172a'; ctx.fill();
+    ctx.strokeStyle = '#334155'; ctx.lineWidth = 3; ctx.stroke();
+  }
+
+  function spin() {
+    const names = getNames();
+    if (names.length < 2) { winnerEl.textContent = 'Добавьте хотя бы 2 варианта';
+      resultEl.style.display = 'block'; copyBtn.style.display = 'none'; return; }
+    if (isSpinning) return;
+    isSpinning = true; spinBtn.disabled = true;
+    resultEl.style.display = 'none'; copyBtn.style.display = 'none';
+    lastSectorIndex = -1;
+
+    if (removeChk.checked && !localStorage.getItem(BACKUP_KEY))
+      localStorage.setItem(BACKUP_KEY, namesInput.value);
+
+    const winnerIndex = secureRandomInt(names.length);
+    const arc = (Math.PI*2) / names.length;
+    const winnerCenterAngle = winnerIndex * arc + arc/2;
+    const targetMod = (-Math.PI/2 - winnerCenterAngle) % (Math.PI*2);
+    const fullTurns = 5 + secureRandomInt(3);
+    const startAngle = currentAngle;
+    const startMod = ((startAngle % (Math.PI*2)) + Math.PI*2) % (Math.PI*2);
+    const normTarget = ((targetMod % (Math.PI*2)) + Math.PI*2) % (Math.PI*2);
+    let delta = normTarget - startMod;
+    if (delta < 0) delta += Math.PI*2;
+    const endAngle = startAngle + fullTurns * Math.PI*2 + delta;
+    const duration = 4500 + secureRandomInt(1000);
+    const startTime = performance.now();
+    const easeOut = t => 1 - Math.pow(1 - t, 3);
+    const sectorAt = angle => {
+      const rel = ((-Math.PI/2 - angle) % (Math.PI*2) + Math.PI*2) % (Math.PI*2);
+      return Math.floor(rel / arc) % names.length;
+    };
+
+    function animate(now) {
+      const t = Math.min((now - startTime) / duration, 1);
+      currentAngle = startAngle + (endAngle - startAngle) * easeOut(t);
+      drawWheel(currentAngle);
+      const sec = sectorAt(currentAngle);
+      if (sec !== lastSectorIndex) { if (lastSectorIndex !== -1) playTick(); lastSectorIndex = sec; }
+      if (t < 1) { rafId = requestAnimationFrame(animate); }
+      else {
+        isSpinning = false; spinBtn.disabled = false;
+        lastWinnerText = names[winnerIndex];
+        winnerEl.textContent = '🎉 ' + lastWinnerText;
+        resultEl.style.display = 'block';
+        copyBtn.style.display = 'block'; copyBtn.style.margin = '8px auto 0';
+        copyBtn.textContent = 'Скопировать';
+        playFanfare();
+        if (removeChk.checked && names.length > 1) {
+          const newNames = names.filter((_, i) => i !== winnerIndex);
+          namesInput.value = newNames.join('\n'); saveNames();
+          currentAngle = 0; drawWheel(currentAngle);
+        }
+        updateCounter();
+      }
+    }
+    rafId = requestAnimationFrame(animate);
+  }
+
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) namesInput.value = saved;
+  } catch(e){}
+  drawWheel(currentAngle); updateCounter();
+
+  namesInput.addEventListener('input', () => {
+    saveNames(); if (!isSpinning) drawWheel(currentAngle); updateCounter();
+  });
+  spinBtn.addEventListener('click', spin);
+  pasteBtn.addEventListener('click', async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text.trim()) return;
+      const cur = namesInput.value.trim();
+      namesInput.value = cur ? cur + '\n' + text.trim() : text.trim();
+      saveNames(); drawWheel(currentAngle); updateCounter();
+      pasteBtn.textContent = '✅ Вставлено';
+      setTimeout(() => pasteBtn.textContent = '📋 Вставить', 1200);
+    } catch(e) {
+      pasteBtn.textContent = '⚠️ Нет доступа';
+      setTimeout(() => pasteBtn.textContent = '📋 Вставить', 1500);
+    }
+  });
+  resetBtn.addEventListener('click', () => {
+    if (isSpinning) return;
+    const backup = localStorage.getItem(BACKUP_KEY);
+    if (backup) { namesInput.value = backup; localStorage.removeItem(BACKUP_KEY); }
+    saveNames(); currentAngle = 0; drawWheel(currentAngle);
+    resultEl.style.display = 'none'; lastWinnerText = ''; updateCounter();
+  });
+  copyBtn.addEventListener('click', async () => {
+    if (!lastWinnerText) return;
+    try { await navigator.clipboard.writeText(lastWinnerText); }
+    catch(e) {
+      const ta = document.createElement('textarea');
+      ta.value = lastWinnerText; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch(_){}
+      document.body.removeChild(ta);
+    }
+    copyBtn.textContent = '✅ Скопировано';
+    setTimeout(() => copyBtn.textContent = 'Скопировать', 1400);
+  });
+
+  return () => { if (rafId) cancelAnimationFrame(rafId); };
+}
+
+// ===== Монетка =====
+function renderCoin(root) {
+  const ICONS = {
+    eagle: `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="8" stroke-linejoin="round"><path d="M50,15 L65,35 L85,25 L70,50 L90,65 L60,65 L50,85 L40,65 L10,65 L30,50 L15,25 L35,35 Z" fill="currentColor" /></svg>`,
+    grid: `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="8" stroke-linejoin="round"><rect x="25" y="25" width="50" height="50" rx="4" /><line x1="25" y1="25" x2="75" y2="75" /><line x1="75" y1="25" x2="25" y2="75" /></svg>`,
+    check: `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><path d="M20,50 L45,75 L80,25" /></svg>`,
+    cross: `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"><path d="M25,25 L75,75 M75,25 L25,75" /></svg>`,
+    glass: `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="8" stroke-linejoin="round"><path d="M30,20 L70,20 L60,60 L50,80 L40,60 Z" /><path d="M35,20 L35,10 M65,20 L65,10" /><path d="M35,40 L65,40" /></svg>`,
+    no_glass: `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="8" stroke-linejoin="round"><path d="M30,20 L70,20 L60,60 L50,80 L40,60 Z" /><path d="M35,20 L35,10 M65,20 L65,10" /><path d="M35,40 L65,40" /><circle cx="50" cy="50" r="35" stroke-width="8" /><line x1="25" y1="25" x2="75" y2="75" stroke-width="8" /></svg>`
+  };
+
+  root.innerHTML = `
+    <h2>🪙 Монетка</h2>
+    <div class="panel coin-wrap">
+      <div class="field" style="max-width:300px;margin:0 auto 10px;width:100%">
+        <select id="coin-mode">
+          <option value="heads_tails">Орёл / Решка</option>
+          <option value="yes_no">Да / Нет</option>
+          <option value="drink">Пить / Не пить</option>
+        </select>
+      </div>
+      <div class="coin-container">
+        <div class="coin" id="coin">
+          <div class="coin-face coin-front">
+            <div class="coin-text top" id="front-text-top">Орёл</div>
+            <div class="coin-svg" id="front-icon"></div>
+            <div class="coin-text bottom" id="front-text-bottom">Орёл</div>
+          </div>
+          <div class="coin-face coin-back">
+            <div class="coin-text top" id="back-text-top">Решка</div>
+            <div class="coin-svg" id="back-icon"></div>
+            <div class="coin-text bottom" id="back-text-bottom">Решка</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" id="coin-btn" style="max-width:300px">Подбросить</button>
+      <div class="result-big" id="coin-result" style="min-height:48px"></div>
+    </div>`;
+
+  const coin = root.querySelector('#coin');
+  const btn = root.querySelector('#coin-btn');
+  const resultEl = root.querySelector('#coin-result');
+  const modeSelect = root.querySelector('#coin-mode');
+  let currentRotation = 0, isFlipping = false, timeoutId = null;
+
+  function updateFaces() {
+    const mode = modeSelect.value;
+    const frontTextTop = root.querySelector('#front-text-top');
+    const frontTextBottom = root.querySelector('#front-text-bottom');
+    const frontIcon = root.querySelector('#front-icon');
+    const backTextTop = root.querySelector('#back-text-top');
+    const backTextBottom = root.querySelector('#back-text-bottom');
+    const backIcon = root.querySelector('#back-icon');
+
+    if (mode === 'heads_tails') {
+      frontTextTop.textContent = 'Орёл'; frontTextBottom.textContent = 'Орёл'; frontIcon.innerHTML = ICONS.eagle;
+      backTextTop.textContent = 'Решка'; backTextBottom.textContent = 'Решка'; backIcon.innerHTML = ICONS.grid;
+    } else if (mode === 'yes_no') {
+      frontTextTop.textContent = 'Да'; frontTextBottom.textContent = 'Да'; frontIcon.innerHTML = ICONS.check;
+      backTextTop.textContent = 'Нет'; backTextBottom.textContent = 'Нет'; backIcon.innerHTML = ICONS.cross;
+    } else if (mode === 'drink') {
+      frontTextTop.textContent = 'Пить'; frontTextBottom.textContent = 'Пить'; frontIcon.innerHTML = ICONS.glass;
+      backTextTop.textContent = 'Не пить'; backTextBottom.textContent = 'Не пить'; backIcon.innerHTML = ICONS.no_glass;
+    }
+  }
+
+  modeSelect.addEventListener('change', updateFaces);
+  updateFaces();
+
+  btn.addEventListener('click', () => {
+    if (isFlipping) return;
+    isFlipping = true; 
+    btn.disabled = true; 
+    modeSelect.disabled = true;
+    resultEl.textContent = '';
+
+    const isHeads = secureRandomInt(2) === 0;
+    const extraTurns = 3 + secureRandomInt(3);
+    const curMod = ((currentRotation % 360) + 360) % 360;
+    const targetMod = isHeads ? 0 : 180;
+    let delta = targetMod - curMod;
+    if (delta < 0) delta += 360;
+    const finalRot = currentRotation + extraTurns * 360 + delta;
+    coin.style.transform = `rotateY(${finalRot}deg)`;
+    currentRotation = finalRot;
+    playCoin();
+
+    timeoutId = setTimeout(() => {
+      isFlipping = false; 
+      btn.disabled = false;
+      modeSelect.disabled = false;
+      
+      const mode = modeSelect.value;
+      let resultText = '';
+      if (mode === 'heads_tails') resultText = isHeads ? '🟡 Орёл' : '⚪ Решка';
+      else if (mode === 'yes_no') resultText = isHeads ? '✅ Да' : '❌ Нет';
+      else if (mode === 'drink') resultText = isHeads ? '🍻 Пить' : '🚫 Не пить';
+      
+      resultEl.textContent = resultText;
+      playFanfare();
+    }, 2600);
+  });
+
+  return () => { if (timeoutId) clearTimeout(timeoutId); };
+}
+
+// ===== Числа =====
+function renderNumber(root) {
+  root.innerHTML = `
+    <h2>🔢 Случайное число</h2>
+    <div class="two-col">
+      <div class="panel">
+        <div class="field"><label>От</label><input type="number" id="num-min" value="1"></div>
+        <div class="field"><label>До</label><input type="number" id="num-max" value="100"></div>
+        <div class="field"><label>Сколько чисел (1–50)</label><input type="number" id="num-count" value="1" min="1" max="50"></div>
+        <label class="checkbox"><input type="checkbox" id="num-norepeat"> Без повторов</label>
+        <button class="btn-primary" id="num-btn" style="margin-top:12px">Сгенерировать</button>
+      </div>
+      <div class="panel">
+        <div class="result" style="min-height:200px;display:flex;align-items:center;justify-content:center;flex-direction:column">
+          <div class="num-result" id="num-result">
+            <span class="result-muted">Нажмите «Сгенерировать»</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  const minInput = root.querySelector('#num-min');
+  const maxInput = root.querySelector('#num-max');
+  const countInput = root.querySelector('#num-count');
+  const noRepeatChk = root.querySelector('#num-norepeat');
+  const btn = root.querySelector('#num-btn');
+  const resultEl = root.querySelector('#num-result');
+
+  btn.addEventListener('click', () => {
+    const min = Math.ceil(parseFloat(minInput.value) || 0);
+    const max = Math.floor(parseFloat(maxInput.value) || 0);
+    const count = Math.max(1, Math.min(50, Math.floor(parseFloat(countInput.value) || 1)));
+    const noRepeat = noRepeatChk.checked;
+
+    if (min > max) {
+      resultEl.innerHTML = '<span class="result-muted">Минимум должен быть меньше максимума</span>';
+      return;
+    }
+    const range = max - min + 1;
+    if (noRepeat && count > range) {
+      resultEl.innerHTML = `<span class="result-muted">Нельзя выбрать ${count} чисел без повторов из диапазона ${range}</span>`;
+      return;
+    }
+
+    const nums = [];
+    if (noRepeat) {
+      if (range <= 10000) {
+        const pool = [];
+        for (let i = min; i <= max; i++) pool.push(i);
+        for (let i = 0; i < count; i++) {
+          const j = i + secureRandomInt(pool.length - i);
+          [pool[i], pool[j]] = [pool[j], pool[i]];
+          nums.push(pool[i]);
+        }
+      } else {
+        const set = new Set();
+        while (set.size < count) set.add(min + secureRandomInt(range));
+        nums.push(...set);
+      }
+      nums.sort((a, b) => a - b);
+    } else {
+      for (let i = 0; i < count; i++) nums.push(min + secureRandomInt(range));
+    }
+
+    resultEl.innerHTML = nums.map(n => `<span class="num-badge">${n}</span>`).join('');
+    playFanfare();
+  });
+
+  return () => {};
+}
+
+// ===== Кубики =====
+function renderDice(root) {
+  root.innerHTML = `
+    <h2>🎲 Кубики</h2>
+    <div class="two-col">
+      <div class="panel">
+        <div class="field"><label>Тип кубика</label>
+          <select id="dice-type">
+            <option value="4">D4</option>
+            <option value="6" selected>D6</option>
+            <option value="8">D8</option>
+            <option value="10">D10</option>
+            <option value="12">D12</option>
+            <option value="20">D20</option>
+            <option value="100">D100</option>
+          </select>
+        </div>
+        <div class="field"><label>Количество (1–20)</label>
+          <input type="number" id="dice-count" value="2" min="1" max="20">
+        </div>
+        <div class="field"><label>Модификатор (+/-)</label>
+          <input type="number" id="dice-mod" value="0">
+        </div>
+        <button class="btn-primary" id="dice-btn" style="margin-top:12px">Бросить</button>
+      </div>
+      <div class="panel">
+        <div class="result" style="min-height:200px">
+          <div id="dice-output"><span class="result-muted">Нажмите «Бросить»</span></div>
+        </div>
+      </div>
+    </div>`;
+
+  const typeInput = root.querySelector('#dice-type');
+  const countInput = root.querySelector('#dice-count');
+  const modInput = root.querySelector('#dice-mod');
+  const btn = root.querySelector('#dice-btn');
+  const outputEl = root.querySelector('#dice-output');
+  let timeoutId = null;
+
+  btn.addEventListener('click', () => {
+    const sides = parseInt(typeInput.value);
+    const count = Math.max(1, Math.min(20, parseInt(countInput.value) || 1));
+    const mod = parseInt(modInput.value) || 0;
+
+    const rolls = [];
+    for (let i = 0; i < count; i++) rolls.push(secureRandomInt(sides) + 1);
+    const sum = rolls.reduce((a, b) => a + b, 0);
+    const total = sum + mod;
+
+    playDice();
+
+    let html = '<div class="dice-result">';
+    rolls.forEach(r => html += `<div class="die">${r}</div>`);
+    html += '</div>';
+    html += `<div class="dice-total">Сумма: ${sum}`;
+    if (mod !== 0) html += ` ${mod > 0 ? '+' : ''}${mod} = <strong>${total}</strong>`;
+    html += '</div>';
+    outputEl.innerHTML = html;
+
+    if (timeoutId) clearTimeout(timeoutId);
+    timeoutId = setTimeout(playFanfare, count * 50 + 100);
+  });
+
+  return () => { if (timeoutId) clearTimeout(timeoutId); };
+}
+
+// ===== Перемешать =====
+function renderShuffle(root) {
+  root.innerHTML = `
+    <h2>🔀 Перемешать список</h2>
+    <div class="two-col">
+      <div class="panel">
+        <textarea id="shuffle-names" placeholder="Введите элементы, каждый с новой строки:&#10;Иван&#10;Мария&#10;Пётр&#10;Анна"></textarea>
+        <div class="btn-row">
+          <button class="btn-small" id="shuffle-paste">📋 Вставить</button>
+        </div>
+        <button class="btn-primary" id="shuffle-btn" style="margin-top:12px">Перемешать</button>
+      </div>
+      <div class="panel">
+        <div class="result" style="min-height:250px;text-align:left">
+          <ul class="shuffle-list" id="shuffle-result">
+            <li class="result-muted">Нажмите «Перемешать»</li>
+          </ul>
+        </div>
+        <button class="btn-secondary" id="shuffle-copy" style="margin:8px auto 0;display:none">Скопировать</button>
+      </div>
+    </div>`;
+
+  const namesInput = root.querySelector('#shuffle-names');
+  const btn = root.querySelector('#shuffle-btn');
+  const resultEl = root.querySelector('#shuffle-result');
+  const pasteBtn = root.querySelector('#shuffle-paste');
+  const copyBtn = root.querySelector('#shuffle-copy');
+  let lastResult = [];
+
+  btn.addEventListener('click', () => {
+    const items = namesInput.value.split('\n').map(s => s.trim()).filter(Boolean);
+    if (items.length < 2) {
+      resultEl.innerHTML = '<li class="result-muted">Добавьте хотя бы 2 элемента</li>';
+      copyBtn.style.display = 'none';
+      return;
+    }
+    for (let i = items.length - 1; i > 0; i--) {
+      const j = secureRandomInt(i + 1);
+      [items[i], items[j]] = [items[j], items[i]];
+    }
+    lastResult = items.slice();
+    resultEl.innerHTML = items.map((item, i) =>
+      `<li><span class="num">${i+1}.</span><span>${escapeHtml(item)}</span></li>`
+    ).join('');
+    copyBtn.style.display = 'block';
+    copyBtn.textContent = 'Скопировать';
+    playFanfare();
+  });
+
+  pasteBtn.addEventListener('click', async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text.trim()) return;
+      const cur = namesInput.value.trim();
+      namesInput.value = cur ? cur + '\n' + text.trim() : text.trim();
+    } catch(e) {}
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    if (!lastResult.length) return;
+    const text = lastResult.join('\n');
+    try { await navigator.clipboard.writeText(text); }
+    catch(e) {
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch(_){}
+      document.body.removeChild(ta);
+    }
+    copyBtn.textContent = '✅ Скопировано';
+    setTimeout(() => copyBtn.textContent = 'Скопировать', 1400);
+  });
+
+  return () => {};
+}
+
+// ===== Разделить на команды =====
+function renderTeams(root) {
+  root.innerHTML = `
+    <h2>👥 Разделить на команды</h2>
+    <div class="two-col">
+      <div class="panel">
+        <div class="field">
+          <label>Участники (каждый с новой строки)</label>
+          <textarea id="teams-names" placeholder="Иван&#10;Мария&#10;Пётр&#10;Анна&#10;Сергей&#10;Ольга"></textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn-small" id="teams-paste">📋 Вставить</button>
+          <button class="btn-small" id="teams-clear">🗑 Очистить</button>
+        </div>
+        <div class="field" style="margin-top:12px">
+          <label>Количество команд (2–10)</label>
+          <input type="number" id="teams-count" value="2" min="2" max="10">
+        </div>
+        <button class="btn-primary" id="teams-btn" style="margin-top:12px">Разбить на команды</button>
+        <div class="counter" id="teams-counter"></div>
+        <p class="result-muted" style="margin-top:8px;font-size:12px">Список сохраняется автоматически</p>
+      </div>
+      <div class="panel">
+        <div class="result" style="min-height:250px;text-align:left">
+          <div class="teams-output" id="teams-output">
+            <span class="result-muted">Нажмите «Разбить на команды»</span>
+          </div>
+        </div>
+        <button class="btn-secondary" id="teams-copy" style="margin:8px auto 0;display:none">Скопировать</button>
+      </div>
+    </div>`;
+
+  const namesInput = root.querySelector('#teams-names');
+  const countInput = root.querySelector('#teams-count');
+  const btn = root.querySelector('#teams-btn');
+  const outputEl = root.querySelector('#teams-output');
+  const counterEl = root.querySelector('#teams-counter');
+  const pasteBtn = root.querySelector('#teams-paste');
+  const clearBtn = root.querySelector('#teams-clear');
+  const copyBtn = root.querySelector('#teams-copy');
+
+  const STORAGE_KEY = 'teams_names_v1';
+  let lastTeams = [];
+
+  const getNames = () => namesInput.value.split('\n').map(s => s.trim()).filter(Boolean);
+  const saveNames = () => { try { localStorage.setItem(STORAGE_KEY, namesInput.value); } catch(e){} };
+
+  function updateCounter() {
+    const names = getNames();
+    counterEl.textContent = names.length
+      ? `Участников: ${names.length}`
+      : '';
+  }
+
+  function distribute(names, teamCount) {
+    const shuffled = names.slice();
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = secureRandomInt(i + 1);
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const teams = Array.from({ length: teamCount }, () => []);
+    const base = Math.floor(shuffled.length / teamCount);
+    const remainder = shuffled.length % teamCount;
+    let idx = 0;
+    for (let t = 0; t < teamCount; t++) {
+      const size = t < remainder ? base + 1 : base;
+      for (let j = 0; j < size; j++) teams[t].push(shuffled[idx++]);
+    }
+    return teams;
+  }
+
+  function renderTeamsResult(teams) {
+    let html = '';
+    teams.forEach((members, i) => {
+      const color = TEAM_COLORS[i % TEAM_COLORS.length];
+      html += `<div class="team-card" style="--team-color:${color}">`;
+      html += `<div class="team-card-header">`;
+      html += `<span class="team-card-name">Команда ${i + 1}</span>`;
+      html += `<span class="team-card-size">${members.length} ${pluralize(members.length, 'человек', 'человека', 'человек')}</span>`;
+      html += `</div><ul>`;
+      members.forEach(m => { html += `<li>${escapeHtml(m)}</li>`; });
+      html += `</ul></div>`;
+    });
+    outputEl.innerHTML = html;
+  }
+
+  function pluralize(n, one, few, many) {
+    const mod10 = n % 10, mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return one;
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+    return many;
+  }
+
+  btn.addEventListener('click', () => {
+    const names = getNames();
+    let teamCount = Math.max(2, Math.min(10, Math.floor(parseFloat(countInput.value) || 2)));
+
+    if (names.length < 2) {
+      outputEl.innerHTML = '<span class="result-muted">Добавьте хотя бы 2 участника</span>';
+      copyBtn.style.display = 'none';
+      return;
+    }
+    if (teamCount > names.length) {
+      teamCount = names.length;
+      countInput.value = teamCount;
+    }
+
+    const teams = distribute(names, teamCount);
+    lastTeams = teams;
+    renderTeamsResult(teams);
+    copyBtn.style.display = 'block';
+    copyBtn.textContent = 'Скопировать';
+    playFanfare();
+  });
+
+  pasteBtn.addEventListener('click', async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text.trim()) return;
+      const cur = namesInput.value.trim();
+      namesInput.value = cur ? cur + '\n' + text.trim() : text.trim();
+      saveNames(); updateCounter();
+    } catch(e) {}
+  });
+
+  clearBtn.addEventListener('click', () => {
+    namesInput.value = '';
+    saveNames(); updateCounter();
+    outputEl.innerHTML = '<span class="result-muted">Нажмите «Разбить на команды»</span>';
+    copyBtn.style.display = 'none';
+    lastTeams = [];
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    if (!lastTeams.length) return;
+    const text = lastTeams.map((members, i) =>
+      `Команда ${i + 1}:\n` + members.map(m => '  • ' + m).join('\n')
+    ).join('\n\n');
+    try { await navigator.clipboard.writeText(text); }
+    catch(e) {
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch(_){}
+      document.body.removeChild(ta);
+    }
+    copyBtn.textContent = '✅ Скопировано';
+    setTimeout(() => copyBtn.textContent = 'Скопировать', 1400);
+  });
+
+  namesInput.addEventListener('input', () => { saveNames(); updateCounter(); });
+
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) namesInput.value = saved;
+  } catch(e){}
+  updateCounter();
+
+  return () => {};
+}
+
+// ===== Волшебный шар 8 =====
+function renderMagic8(root) {
+  root.innerHTML = `
+    <h2>🔮 Волшебный шар 8</h2>
+    <div class="panel magic8-wrap">
+      <div class="field" style="max-width:500px;margin:0 auto 24px;width:100%">
+        <label>Ваш вопрос (необязательно)</label>
+        <input type="text" id="magic-question" placeholder="Стоит ли мне...?" maxlength="200">
+      </div>
+      <div class="magic-ball" id="magic-ball">
+        <div class="magic-window" id="magic-window">
+          <div class="magic-number">8</div>
+          <div class="magic-answer" id="magic-answer"></div>
+        </div>
+      </div>
+      <button class="btn-primary" id="magic-btn" style="max-width:300px;margin:24px auto 0">Спросить шар</button>
+      <div class="magic-advice" id="magic-advice" style="display:none"></div>
+      <p class="magic-disclaimer">
+        🔮 Это игра и развлечение. Ответы шара — не совет и не руководство к действию.
+        По вопросам здоровья, финансов, права и личной безопасности обращайтесь к специалистам.
+      </p>
+    </div>`;
+
+  const ANSWERS = [
+    'Бесспорно', 'Предрешено', 'Никаких сомнений', 'Определённо да',
+    'Можешь быть уверен в этом', 'Мне кажется — «да»', 'Вероятнее всего',
+    'Хорошие перспективы', 'Да', 'Знаки говорят — «да»',
+    'Пока неясно, попробуй снова', 'Спроси позже', 'Лучше не рассказывать сейчас',
+    'Сейчас нельзя предсказать', 'Сконцентрируйся и спроси опять',
+    'Даже не думай', 'Мой ответ — «нет»', 'По моим данным — «нет»',
+    'Перспективы не очень хорошие', 'Весьма сомнительно'
+  ];
+
+  function normalizeText(s) {
+    return String(s).toLowerCase().replace(/ё/g, 'е')
+      .replace(/[^a-zа-я0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  const SENSITIVE = [
+    {
+      id: 'crisis',
+      words: [
+        'суицид', 'самоубийств', 'убить себя', 'покончить с собой', 'покончить жизнь',
+        'не хочу жить', 'не хочу больше жить', 'хочу умереть', 'хочу сдохнуть',
+        'резать себя', 'порезать себя', 'самоповрежден', 'причинить себе вред',
+        'навредить себе', 'нанести себе', 'повеситься', 'спрыгнуть с крыш',
+        'выпить таблеток', 'передозировк'
+      ],
+      title: 'Я не отвечаю на такой вопрос',
+      advice: `Если вам сейчас тяжело или есть мысли о причинении вреда себе — пожалуйста, обратитесь за помощью. Это нормально — просить поддержку.<br><br>
+        📞 <strong>8-800-2000-122</strong> — бесплатная круглосуточная психологическая помощь (Россия).<br>
+        📞 <strong>112</strong> — если ситуация экстренная.<br><br>
+        Вы не одни. Пожалуйста, поговорите с кем-то, кому доверяете.`
+    },
+    {
+      id: 'danger',
+      words: [
+        'убить человека', 'убить людей', 'убить маму', 'убить папу', 'убить брата',
+        'убить сестру', 'убить друга', 'зарезать', 'задушить', 'взорвать', 'поджечь',
+        'выпить яд', 'отравить', 'навредить другому', 'навредить человеку',
+        'нанести вред другому'
+      ],
+      title: 'На такой вопрос я не отвечаю',
+      advice: `Я не даю советов, связанных с опасными или противозаконными действиями.<br><br>
+        Если вы в трудной ситуации и чувствуете злость или отчаяние — поговорите с близким человеком или психологом. Это поможет больше, чем любой совет шара.`
+    },
+    {
+      id: 'medical',
+      words: [
+        'лекарств', 'таблетк', 'препарат', 'дозировк', 'диагноз', 'болезн',
+        'заболеван', 'симптом', 'лечени', 'лечить', 'вылечит', 'излечит',
+        'онкологи', 'опухол', 'беременн', 'аборт', 'вакцин', 'прививк',
+        'антибиотик', 'наркотик', 'отравлен', 'инсулин', 'антидепрессант',
+        'психиатр', 'психоз', 'шизофрен', 'депресси', 'мрт', 'узи',
+        'сдать анализ', 'сдать анализы', 'операци', 'хирург'
+      ],
+      title: 'Я не даю медицинских советов',
+      advice: `Вопросы здоровья, лекарств и лечения — не для волшебного шара.<br><br>
+        Пожалуйста, обратитесь к врачу. Он знает вашу ситуацию и даст безопасный ответ, основанный на знаниях, а не на случайности.`
+    },
+    {
+      id: 'legal_finance',
+      words: [
+        'инвестиц', 'ипотек', 'кредит', 'банкрот', 'юрист', 'адвокат',
+        'уголовн', 'судебн', 'подать в суд', 'пойти в суд', 'обратиться в суд',
+        'наследств', 'завещан', 'опек', 'вложить деньги', 'вложить средств'
+      ],
+      title: 'Я не даю юридических и финансовых советов',
+      advice: `Решения о деньгах, кредитах, сделках или суде лучше принимать со специалистом — юристом, финансовым консультантом или бухгалтером.<br><br>
+        Шар тут не помощник: слишком высока цена ошибки.`
+    }
+  ];
+
+  function checkSensitive(text) {
+    if (!text) return null;
+    const norm = normalizeText(text);
+    if (!norm) return null;
+    for (const cat of SENSITIVE) {
+      for (const w of cat.words) {
+        if (norm.includes(w)) return cat;
+      }
+    }
+    return null;
+  }
+
+  const ball = root.querySelector('#magic-ball');
+  const windowEl = root.querySelector('#magic-window');
+  const answerEl = root.querySelector('#magic-answer');
+  const adviceEl = root.querySelector('#magic-advice');
+  const questionInput = root.querySelector('#magic-question');
+  const btn = root.querySelector('#magic-btn');
+  let timeout1 = null, timeout2 = null, timeout3 = null;
+  let isAnimating = false;
+
+  function resetWindow() {
+    windowEl.classList.remove('showing-answer', 'refusal');
+    answerEl.textContent = '';
+    adviceEl.style.display = 'none';
+    adviceEl.innerHTML = '';
+  }
+
+  function ask() {
+    if (isAnimating) return;
+
+    const question = questionInput.value.trim();
+    
+    // === Проверка на пустой вопрос ===
+    if (!question) {
+      questionInput.focus();
+      questionInput.style.borderColor = 'var(--danger)';
+      questionInput.style.boxShadow = '0 0 0 1px var(--danger)';
+      
+      const originalPlaceholder = questionInput.placeholder;
+      questionInput.placeholder = 'Сначала задайте вопрос...';
+      
+      setTimeout(() => {
+        questionInput.style.borderColor = 'var(--border)';
+        questionInput.style.boxShadow = 'none';
+        questionInput.placeholder = originalPlaceholder;
+      }, 2000);
+      
+      return; 
+    }
+
+    isAnimating = true;
+    btn.disabled = true;
+    resetWindow();
+
+    const sensitive = checkSensitive(question);
+
+    if (sensitive) {
+      playTone(300, 0.1, 'triangle', 0.08);
+      ball.classList.add('shaking');
+
+      timeout1 = setTimeout(() => {
+        ball.classList.remove('shaking');
+        answerEl.textContent = sensitive.title;
+        windowEl.classList.add('showing-answer', 'refusal');
+        adviceEl.innerHTML = sensitive.advice;
+        adviceEl.style.display = 'block';
+
+        playTone(400, 0.15, 'sine', 0.08);
+        timeout2 = setTimeout(() => playTone(300, 0.15, 'sine', 0.08), 150);
+        timeout3 = setTimeout(() => {
+          playTone(200, 0.2, 'sine', 0.08);
+          isAnimating = false;
+          btn.disabled = false;
+        }, 300);
+      }, 700);
+      return;
+    }
+
+    playTone(220, 0.12, 'triangle', 0.08);
+    setTimeout(() => playTone(180, 0.1, 'triangle', 0.06), 180);
+    setTimeout(() => playTone(240, 0.1, 'triangle', 0.06), 360);
+
+    ball.classList.add('shaking');
+    const answer = ANSWERS[secureRandomInt(ANSWERS.length)];
+
+    timeout1 = setTimeout(() => {
+      ball.classList.remove('shaking');
+      answerEl.textContent = answer;
+      windowEl.classList.add('showing-answer');
+
+      playTone(880, 0.35, 'sine', 0.12);
+      timeout2 = setTimeout(() => playTone(1320, 0.35, 'sine', 0.1), 150);
+
+      timeout3 = setTimeout(() => {
+        isAnimating = false;
+        btn.disabled = false;
+      }, 500);
+    }, 1200);
+  }
+
+  ball.addEventListener('click', ask);
+  btn.addEventListener('click', ask);
+
+  return () => {
+    if (timeout1) clearTimeout(timeout1);
+    if (timeout2) clearTimeout(timeout2);
+    if (timeout3) clearTimeout(timeout3);
+    ball.classList.remove('shaking');
+  };
+}
+
+// ===== Роутер =====
+const pages = {
+  wheel:   { render: renderWheel },
+  coin:    { render: renderCoin },
+  number:  { render: renderNumber },
+  dice:    { render: renderDice },
+  shuffle: { render: renderShuffle },
+  teams:   { render: renderTeams },
+  magic8:  { render: renderMagic8 }
+};
+
+let currentCleanup = null;
+
+function navigate(pageKey) {
+  if (!pages[pageKey]) pageKey = 'wheel';
+  const app = document.getElementById('app');
+  if (currentCleanup) { try { currentCleanup(); } catch(e){} currentCleanup = null; }
+  app.innerHTML = '';
+  currentCleanup = pages[pageKey].render(app) || null;
+  document.querySelectorAll('nav a').forEach(a => {
+    a.classList.toggle('active', a.dataset.page === pageKey);
+  });
+  if (location.hash !== '#' + pageKey) {
+    history.replaceState(null, '', '#' + pageKey);
+  }
+  window.scrollTo(0, 0);
+}
+
+// ===== Звук (глобальная кнопка) =====
+const soundToggle = document.getElementById('sound-toggle');
+function updateSoundIcon() {
+  soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
+  soundToggle.title = soundEnabled ? 'Звук: вкл' : 'Звук: выкл';
+}
+soundToggle.addEventListener('click', () => {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem('sound', soundEnabled ? 'on' : 'off');
+  updateSoundIcon();
+  if (soundEnabled) playTone(800, 0.1, 'sine', 0.1);
+});
+updateSoundIcon();
+
+// ===== Старт =====
+window.addEventListener('hashchange', () => {
+  navigate(location.hash.slice(1) || 'wheel');
+});
+if (!location.hash) history.replaceState(null, '', '#wheel');
+navigate(location.hash.slice(1) || 'wheel');
+</script>
+
+<!-- Подвал сайта -->
+<footer>
+  <a href="privacy.html">Политика конфиденциальности</a> | 
+  <a href="contacts.html">Контакты</a>
+</footer>
+
+</body>
+</html>
