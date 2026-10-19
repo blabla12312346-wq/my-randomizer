@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://blabla12312346-wq.github.io/my-randomizer/sitemap.xml
