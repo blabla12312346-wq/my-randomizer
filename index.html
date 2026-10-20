@@ -274,6 +274,17 @@ summary::-webkit-details-marker { display: none; }
 summary::after { content: '+'; color: var(--accent); font-size: 1.5rem; font-weight: bold; transition: transform 0.3s; }
 details[open] summary::after { content: '−'; transform: rotate(180deg); }
 details p { margin-top: 15px; color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 0; }
+
+/* ========================================================= */
+/* ⬆️ КНОПКА НАВЕРХ */
+/* ========================================================= */
+#scrollToTopBtn {
+  display: none; position: fixed; bottom: 20px; right: 20px; z-index: 99;
+  background-color: var(--accent); color: white; border: none; outline: none;
+  cursor: pointer; padding: 12px 16px; border-radius: 50%; font-size: 20px; font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: opacity 0.3s, transform 0.3s, background-color 0.3s;
+}
+#scrollToTopBtn:hover { background-color: var(--accent-2); transform: scale(1.1); }
 </style>
 
 <!-- ========================================================= -->
@@ -1388,6 +1399,24 @@ navigate(location.hash.slice(1) || 'wheel');
   <a href="contacts.html">Контакты</a> |
   <a href="sitemap.html">Карта сайта</a>
 </footer>
+
+<!-- ========================================================= -->
+<!-- ⬆️ БЛОК 19: КНОПКА НАВЕРХ -->
+<!-- ========================================================= -->
+<button id="scrollToTopBtn" title="Наверх">↑</button>
+<script>
+  const topBtn = document.getElementById("scrollToTopBtn");
+  window.addEventListener('scroll', () => {
+    if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+      topBtn.style.display = "block";
+    } else {
+      topBtn.style.display = "none";
+    }
+  });
+  topBtn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+</script>
 
 </body>
 </html>
