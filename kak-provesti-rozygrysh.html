@@ -36,6 +36,25 @@
   footer { text-align: center; padding: 20px; border-top: 1px solid var(--border); margin-top: 40px; font-size: 13px; color: var(--muted); }
   footer a { color: var(--muted); text-decoration: none; margin: 0 10px; }
   footer a:hover { color: var(--accent); }
+
+  /* Кнопка Наверх */
+  #scrollToTopBtn {
+    display: none; position: fixed; bottom: 20px; right: 20px; z-index: 99;
+    background-color: var(--accent); color: white; border: none; outline: none;
+    cursor: pointer; padding: 12px 16px; border-radius: 50%; font-size: 20px; font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: opacity 0.3s, transform 0.3s, background-color 0.3s;
+  }
+  #scrollToTopBtn:hover { background-color: #16a34a; transform: scale(1.1); }
+
+  /* Блок "Поделиться" */
+  .share-block { margin-top: 30px; padding: 20px; background: var(--panel); border-radius: 8px; text-align: center; border: 1px solid var(--border); }
+  .share-block h3 { margin-bottom: 15px; font-size: 1.1rem; color: #fff; }
+  .share-buttons { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .share-btn { display: inline-block; padding: 10px 20px; border-radius: 6px; color: #fff; text-decoration: none; font-weight: bold; font-size: 14px; border: none; cursor: pointer; transition: opacity 0.2s; }
+  .share-btn:hover { opacity: 0.8; }
+  .btn-vk { background-color: #0077FF; }
+  .btn-tg { background-color: #0088cc; }
+  .btn-copy { background-color: var(--accent); }
 </style>
 </head>
 <body>
@@ -69,6 +88,42 @@
 
   <a href="index.html" class="btn">Перейти к Колесу Имен 🎡</a>
 </main>
+
+<!-- Блок Поделиться -->
+<div class="share-block" style="max-width: 800px; margin: 30px auto; padding: 20px;">
+  <h3>Понравилась статья? Поделитесь с друзьями!</h3>
+  <div class="share-buttons">
+    <a href="https://vk.com/share.php?url=https://randomchoices.ru/kak-provesti-rozygrysh.html" target="_blank" class="share-btn btn-vk">ВКонтакте</a>
+    <a href="https://t.me/share/url?url=https://randomchoices.ru/kak-provesti-rozygrysh.html" target="_blank" class="share-btn btn-tg">Telegram</a>
+    <button onclick="copyLink()" class="share-btn btn-copy" id="copyBtn">Скопировать ссылку</button>
+  </div>
+</div>
+
+<!-- Кнопка Наверх -->
+<button id="scrollToTopBtn" title="Наверх">↑</button>
+<script>
+  // Логика кнопки Наверх
+  const topBtn = document.getElementById("scrollToTopBtn");
+  window.addEventListener('scroll', () => {
+    if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+      topBtn.style.display = "block";
+    } else {
+      topBtn.style.display = "none";
+    }
+  });
+  topBtn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // Логика копирования ссылки
+  function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = '✅ Скопировано!';
+      setTimeout(() => { btn.textContent = 'Скопировать ссылку'; }, 2000);
+    });
+  }
+</script>
 
 <footer>
   <a href="index.html">Главная</a> | 
