@@ -262,6 +262,18 @@ label.checkbox { display: flex; align-items: center; gap: 8px; margin: 10px 0; c
 footer { text-align: center; padding: 20px; font-size: 13px; border-top: 1px solid var(--border); margin-top: 40px; }
 footer a { color: var(--muted); text-decoration: none; margin: 0 10px; transition: color 0.2s; }
 footer a:hover { color: var(--accent); }
+
+/* ========================================================= */
+/* ❓ БЛОК FAQ: СТИЛИ ДЛЯ ВОПРОС-ОТВЕТА */
+/* ========================================================= */
+.faq-section { max-width: 800px; margin: 40px auto 20px; padding: 0 20px; width: 100%; }
+.faq-section h2 { text-align: center; margin-bottom: 20px; color: #fff; font-size: 1.5rem; }
+details { background: var(--panel); margin-bottom: 10px; border-radius: 8px; padding: 15px; cursor: pointer; border: 1px solid var(--border); }
+summary { font-weight: 600; color: var(--text); list-style: none; display: flex; justify-content: space-between; align-items: center; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: '+'; color: var(--accent); font-size: 1.5rem; font-weight: bold; transition: transform 0.3s; }
+details[open] summary::after { content: '−'; transform: rotate(180deg); }
+details p { margin-top: 15px; color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 0; }
 </style>
 
 <!-- ========================================================= -->
@@ -1337,7 +1349,34 @@ navigate(location.hash.slice(1) || 'wheel');
 </script>
 
 <!-- ========================================================= -->
-<!-- 🔗 БЛОК 17: ПОДВАЛ САЙТА (ФУТЕР) -->
+<!-- ❓ БЛОК 17: FAQ (ВОПРОС-ОТВЕТ) -->
+<!-- ========================================================= -->
+<div class="faq-section">
+  <h2>Частые вопросы</h2>
+  
+  <details>
+    <summary>Пользоваться сайтом бесплатно?</summary>
+    <p>Да, абсолютно все инструменты на сайте (колесо, монетка, кубики и др.) доступны бесплатно и без регистрации. Мы зарабатываем на жизнь за счет показа ненавязчивой рекламы.</p>
+  </details>
+  
+  <details>
+    <summary>Насколько честен ваш рандомайзер?</summary>
+    <p>Мы используем криптографически стойкий генератор случайных чисел (<code>crypto.getRandomValues</code>), который применяется в банковских системах и системах безопасности. Результат невозможно подкрутить.</p>
+  </details>
+  
+  <details>
+    <summary>Можно ли использовать сайт для розыгрышей в соцсетях?</summary>
+    <p>Конечно! Наше колесо имен идеально подходит для проведения конкурсов в ВКонтакте или Telegram. Подробную инструкцию читайте в нашей статье <a href="kak-provesti-rozygrysh.html" style="color: var(--accent);">«Как провести честный розыгрыш»</a>.</p>
+  </details>
+  
+  <details>
+    <summary>Работает ли сайт на мобильных телефонах?</summary>
+    <p>Да, интерфейс полностью адаптирован под смартфоны и планшеты. Вы можете крутить колесо или подбрасывать монетку прямо с экрана телефона.</p>
+  </details>
+</div>
+
+<!-- ========================================================= -->
+<!-- 🔗 БЛОК 18: ПОДВАЛ САЙТА (ФУТЕР) -->
 <!-- ========================================================= -->
 <footer>
   <div style="margin-bottom: 10px;">
