@@ -3,8 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- ========================================================= -->
+<!-- 🔍 БЛОК 1: МЕТА-ТЕГИ ДЛЯ ПОИСКОВИКОВ (ПОДТВЕРЖДЕНИЕ ПРАВ) -->
+<!-- ========================================================= -->
 <meta name="yandex-verification" content="295c487e0a070515" />
+
+<!-- ========================================================= -->
+<!-- 🖼️ БЛОК 2: ИКОНКА САЙТА (FAVICON) В ВИДЕ ЗЕЛЕНОГО КУБИКА -->
+<!-- ========================================================= -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%2322c55e'/%3E%3Ccircle cx='25' cy='25' r='8' fill='%23fff'/%3E%3Ccircle cx='75' cy='25' r='8' fill='%23fff'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%23fff'/%3E%3Ccircle cx='25' cy='75' r='8' fill='%23fff'/%3E%3Ccircle cx='75' cy='75' r='8' fill='%23fff'/%3E%3C/svg%3E">
+
 <title>Рандомайзер — колесо, монетка, числа, кубики, шар 8</title>
+
 <style>
 :root {
   --bg: #0f172a; --panel: #1e293b; --border: #334155; --border-light: #475569;
@@ -64,6 +75,19 @@ label.checkbox { display: flex; align-items: center; gap: 8px; margin: 10px 0; c
   border-top: 22px solid var(--danger); z-index: 2;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
 .counter { font-size: 13px; color: var(--warn); font-weight: 600; margin: 8px 0; min-height: 18px; }
+
+/* Стили для SEO-текстов (аккуратные блоки внизу страницы) */
+.seo-text {
+  margin-top: 24px;
+  padding: 16px;
+  background: var(--bg);
+  border-left: 3px solid var(--border-light);
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.seo-text strong { color: var(--text); }
 
 /* ===== Стильная схематичная монетка ===== */
 .coin-wrap { display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 20px 0; }
@@ -232,6 +256,9 @@ footer a { color: var(--muted); text-decoration: none; margin: 0 10px; transitio
 footer a:hover { color: var(--accent); }
 </style>
 
+<!-- ========================================================= -->
+<!-- 📊 БЛОК 3: КОД ЯНДЕКС МЕТРИКИ -->
+<!-- ========================================================= -->
 <!-- Yandex.Metrika counter -->
 <script type="text/javascript">
     (function(m,e,t,r,i,k,a){
@@ -249,7 +276,9 @@ footer a:hover { color: var(--accent); }
 </head>
 <body>
 
-<!-- Cookie-баннер -->
+<!-- ========================================================= -->
+<!-- 🍪 БЛОК 4: КУКИ-БАННЕР -->
+<!-- ========================================================= -->
 <div id="cookie-banner" style="position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; color: #e2e8f0; padding: 15px; text-align: center; z-index: 9999; box-shadow: 0 -2px 10px rgba(0,0,0,0.5); font-size: 14px; display: none;">
     Мы используем файлы cookie для улучшения работы сайта и показа рекламы. 
     <a href="privacy.html" style="color: #22c55e;">Подробнее</a>
@@ -261,6 +290,9 @@ footer a:hover { color: var(--accent); }
     }
 </script>
 
+<!-- ========================================================= -->
+<!-- 📱 БЛОК 5: ШАПКА САЙТА И НАВИГАЦИЯ -->
+<!-- ========================================================= -->
 <header>
   <div class="header-top">
     <h1>🎲 Рандомайзер</h1>
@@ -278,7 +310,9 @@ footer a:hover { color: var(--accent); }
 </header>
 <main id="app"></main>
 <script>
-// ===== Утилиты =====
+// =========================================================
+// ⚙️ БЛОК 6: ВСПОМОГАТЕЛЬНЫЕ УТИЛИТЫ (Рандом и Звук)
+// =========================================================
 function secureRandomInt(max) {
   if (max <= 0) return 0;
   const buf = new Uint32Array(1);
@@ -329,7 +363,9 @@ function escapeHtml(str) {
   })[c]);
 }
 
-// ===== Колесо =====
+// =========================================================
+// 🎡 БЛОК 7: ВКЛАДКА «КОЛЕСО ИМЁН» (HTML и Логика)
+// =========================================================
 function renderWheel(root) {
   root.innerHTML = `
     <h2>🎡 Колесо имён</h2>
@@ -355,6 +391,9 @@ function renderWheel(root) {
           <button class="btn-secondary" id="wheel-copy" style="margin-top:8px;display:none">Скопировать</button>
         </div>
       </div>
+    </div>
+    <div class="seo-text">
+      <strong>Онлайн-колесо имён для честных розыгрышей и жеребьёвки.</strong> Вставьте список участников (каждый с новой строки) и нажмите «Крутить». Используется криптографически стойкий генератор случайных чисел, поэтому победитель выбирается абсолютно случайно. Идеально для конкурсов в соцсетях, стримов и уроков.
     </div>`;
 
   const canvas = root.querySelector('#wheel-canvas');
@@ -521,7 +560,9 @@ function renderWheel(root) {
   return () => { if (rafId) cancelAnimationFrame(rafId); };
 }
 
-// ===== Монетка =====
+// =========================================================
+// 🪙 БЛОК 8: ВКЛАДКА «МОНЕТКА» (HTML и Логика)
+// =========================================================
 function renderCoin(root) {
   const ICONS = {
     eagle: `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="8" stroke-linejoin="round"><path d="M50,15 L65,35 L85,25 L70,50 L90,65 L60,65 L50,85 L40,65 L10,65 L30,50 L15,25 L35,35 Z" fill="currentColor" /></svg>`,
@@ -558,6 +599,9 @@ function renderCoin(root) {
       </div>
       <button class="btn-primary" id="coin-btn" style="max-width:300px">Подбросить</button>
       <div class="result-big" id="coin-result" style="min-height:48px"></div>
+    </div>
+    <div class="seo-text">
+      <strong>Виртуальный подброс монетки онлайн.</strong> Выберите один из трёх режимов: классические «Орёл и Решка», быстрый ответ «Да / Нет» или шуточный «Пить / Не пить». Наш рандомайзер использует честный алгоритм 50/50, который невозможно подкрутить.
     </div>`;
 
   const coin = root.querySelector('#coin');
@@ -627,7 +671,9 @@ function renderCoin(root) {
   return () => { if (timeoutId) clearTimeout(timeoutId); };
 }
 
-// ===== Числа =====
+// =========================================================
+// 🔢 БЛОК 9: ВКЛАДКА «СЛУЧАЙНЫЕ ЧИСЛА» (HTML и Логика)
+// =========================================================
 function renderNumber(root) {
   root.innerHTML = `
     <h2>🔢 Случайное число</h2>
@@ -646,6 +692,9 @@ function renderNumber(root) {
           </div>
         </div>
       </div>
+    </div>
+    <div class="seo-text">
+      <strong>Генератор случайных чисел онлайн.</strong> Укажите диапазон (от и до) и количество чисел. Можно включить режим «Без повторов», чтобы использовать генератор для лотерей или жеребьёвки. Все числа генерируются с помощью надежного криптографического алгоритма.
     </div>`;
 
   const minInput = root.querySelector('#num-min');
@@ -698,7 +747,9 @@ function renderNumber(root) {
   return () => {};
 }
 
-// ===== Кубики =====
+// =========================================================
+// 🎲 БЛОК 10: ВКЛАДКА «КУБИКИ» (HTML и Логика)
+// =========================================================
 function renderDice(root) {
   root.innerHTML = `
     <h2>🎲 Кубики</h2>
@@ -728,6 +779,9 @@ function renderDice(root) {
           <div id="dice-output"><span class="result-muted">Нажмите «Бросить»</span></div>
         </div>
       </div>
+    </div>
+    <div class="seo-text">
+      <strong>Бросить игральные кубики онлайн (D4, D6, D8, D10, D12, D20, D100).</strong> Отличный помощник для настольных ролевых игр (D&D), «Мафии» или простых игр в компании. Выберите тип кубика и количество, а модификатор поможет рассчитать итоговую сумму броска.
     </div>`;
 
   const typeInput = root.querySelector('#dice-type');
@@ -764,7 +818,9 @@ function renderDice(root) {
   return () => { if (timeoutId) clearTimeout(timeoutId); };
 }
 
-// ===== Перемешать =====
+// =========================================================
+// 🔀 БЛОК 11: ВКЛАДКА «ПЕРЕМЕШАТЬ СПИСОК» (HTML и Логика)
+// =========================================================
 function renderShuffle(root) {
   root.innerHTML = `
     <h2>🔀 Перемешать список</h2>
@@ -784,6 +840,9 @@ function renderShuffle(root) {
         </div>
         <button class="btn-secondary" id="shuffle-copy" style="margin:8px auto 0;display:none">Скопировать</button>
       </div>
+    </div>
+    <div class="seo-text">
+      <strong>Случайное перемешивание списка онлайн.</strong> Введите любые элементы (имена, задания, варианты) и получите их в случайном порядке. Удобно для проведения жеребьёвки, распределения очередности или создания случайных пар.
     </div>`;
 
   const namesInput = root.querySelector('#shuffle-names');
@@ -839,7 +898,9 @@ function renderShuffle(root) {
   return () => {};
 }
 
-// ===== Разделить на команды =====
+// =========================================================
+// 👥 БЛОК 12: ВКЛАДКА «РАЗДЕЛИТЬ НА КОМАНДЫ» (HTML и Логика)
+// =========================================================
 function renderTeams(root) {
   root.innerHTML = `
     <h2>👥 Разделить на команды</h2>
@@ -869,6 +930,9 @@ function renderTeams(root) {
         </div>
         <button class="btn-secondary" id="teams-copy" style="margin:8px auto 0;display:none">Скопировать</button>
       </div>
+    </div>
+    <div class="seo-text">
+      <strong>Онлайн-рандомайзер для разделения на команды.</strong> Введите список участников и укажите количество команд. Программа случайным образом и максимально равномерно распределит людей, что идеально подходит для учителей, тренеров и тимбилдинга.
     </div>`;
 
   const namesInput = root.querySelector('#teams-names');
@@ -999,7 +1063,9 @@ function renderTeams(root) {
   return () => {};
 }
 
-// ===== Волшебный шар 8 =====
+// =========================================================
+// 🔮 БЛОК 13: ВКЛАДКА «ВОЛШЕБНЫЙ ШАР 8» (HTML и Логика)
+// =========================================================
 function renderMagic8(root) {
   root.innerHTML = `
     <h2>🔮 Волшебный шар 8</h2>
@@ -1020,6 +1086,9 @@ function renderMagic8(root) {
         🔮 Это игра и развлечение. Ответы шара — не совет и не руководство к действию.
         По вопросам здоровья, финансов, права и личной безопасности обращайтесь к специалистам.
       </p>
+    </div>
+    <div class="seo-text">
+      <strong>Волшебный шар 8 (Magic 8-Ball) онлайн.</strong> Задайте свой вопрос, и шар даст один из 20 классических ответов. Это отличная игра для вечеринок и развлечения. Внимание: шар не даёт реальных предсказаний и не заменяет советы специалистов!
     </div>`;
 
   const ANSWERS = [
@@ -1125,7 +1194,6 @@ function renderMagic8(root) {
 
     const question = questionInput.value.trim();
     
-    // === Проверка на пустой вопрос ===
     if (!question) {
       questionInput.focus();
       questionInput.style.borderColor = 'var(--danger)';
@@ -1204,7 +1272,9 @@ function renderMagic8(root) {
   };
 }
 
-// ===== Роутер =====
+// =========================================================
+// 🚏 БЛОК 14: РОУТЕР (Переключение между вкладками)
+// =========================================================
 const pages = {
   wheel:   { render: renderWheel },
   coin:    { render: renderCoin },
@@ -1232,7 +1302,9 @@ function navigate(pageKey) {
   window.scrollTo(0, 0);
 }
 
-// ===== Звук (глобальная кнопка) =====
+// =========================================================
+// 🔊 БЛОК 15: ГЛОБАЛЬНАЯ КНОПКА ЗВУКА
+// =========================================================
 const soundToggle = document.getElementById('sound-toggle');
 function updateSoundIcon() {
   soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
@@ -1246,7 +1318,9 @@ soundToggle.addEventListener('click', () => {
 });
 updateSoundIcon();
 
-// ===== Старт =====
+// =========================================================
+// 🚀 БЛОК 16: ЗАПУСК САЙТА
+// =========================================================
 window.addEventListener('hashchange', () => {
   navigate(location.hash.slice(1) || 'wheel');
 });
@@ -1254,10 +1328,12 @@ if (!location.hash) history.replaceState(null, '', '#wheel');
 navigate(location.hash.slice(1) || 'wheel');
 </script>
 
-<!-- Подвал сайта -->
+<!-- ========================================================= -->
+<!-- 🔗 БЛОК 17: ПОДВАЛ САЙТА (ФУТЕР) -->
+<!-- ========================================================= -->
 <footer>
   <a href="privacy.html">Политика конфиденциальности</a> | 
-  <a href="contacts.html">Контакты</a>
+  <a href="contacts.html">Контакты</a> |
   <a href="sitemap.html">Карта сайта</a>
 </footer>
 
